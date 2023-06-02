@@ -1,13 +1,14 @@
+
 import 'dart:async';
 import 'dart:io';
 
-import 'package:database_flutter/db/function/db_functions.dart';
-import 'package:database_flutter/db/model/data_model.dart';
+import 'package:database_flutter/bloc/studentblock/bloc/app_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/photoblock/bloc/photo_bloc.dart';
 
 class AddStudents extends StatefulWidget {
-  const AddStudents({super.key});
+   const AddStudents({super.key});
 
   @override
   State<AddStudents> createState() => _AddStudentsState();
@@ -21,7 +22,10 @@ class _AddStudentsState extends State<AddStudents> {
   TextEditingController placeCOntroller = TextEditingController();
 
   TextEditingController phoneNumberCOntroller = TextEditingController();
+
   final formKey = GlobalKey<FormState>();
+
+  File? photo;
 
   @override
   Widget build(BuildContext context) {
@@ -39,24 +43,30 @@ class _AddStudentsState extends State<AddStudents> {
               children: [
                 Align(
                     alignment: Alignment.topCenter,
-                    child: userphoto?.path == null
-                        ? const CircleAvatar(
-                            backgroundImage: NetworkImage(
-                                'https://static.toiimg.com/thumb/resizemode-4,msid-76729750,imgsize-249247,width-720/76729750.jpg'),
-                            radius: 60,
-                          )
-                        : CircleAvatar(
+                    child: BlocBuilder<PhotoBloc, PhotoState>(
+                      builder: (context, state) {
+                        if (state is Photoloaded) {
+                          photo = state.photo;
+                          return CircleAvatar(
                             radius: 60,
                             backgroundImage: FileImage(
-                              File(userphoto!.path),
+                              File(state.photo!.path),
                             ),
-                          )),
+                          );
+                        }
+                        return const CircleAvatar(
+                          backgroundImage: NetworkImage(
+                              'https://static.toiimg.com/thumb/resizemode-4,msid-76729750,imgsize-249247,width-720/76729750.jpg'),
+                          radius: 60,
+                        );
+                      },
+                    )),
                 const SizedBox(
                   height: 10,
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
-                    getPhoto();
+                   BlocProvider.of<PhotoBloc>(context).add(PhotoSelectedEvents());
                   },
                   icon: const Icon(Icons.image),
                   label: const Text('Add Image'),
@@ -154,21 +164,19 @@ class _AddStudentsState extends State<AddStudents> {
                 ElevatedButton(
                   onPressed: () {
                     if (formKey.currentState!.validate()) {
-
-                    if (userphoto != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          behavior: SnackBarBehavior.floating,
-                          content: Text('${nameController.text} Added'),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
-                      onAddStudentButtonClicked();
-                    } else {
-                      imageSnackBar(context);
+                      if (photo != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            behavior: SnackBarBehavior.floating,
+                            content: Text('${nameController.text} Added'),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                        onAddStudentButtonClicked();
+                      } else {
+                        imageSnackBar(context);
+                      }
                     }
-                    }
-
                   },
                   child: const Text('submit'),
                 ),
@@ -186,31 +194,26 @@ class _AddStudentsState extends State<AddStudents> {
     final phone = phoneNumberCOntroller.text.trim();
     final place = placeCOntroller.text.trim();
 
-    final studentAdd = StudentModel(
+    // final studentAdd = StudentModel(
+    //     name: name,
+    //     age: age,
+    //     phonenumber: phone,
+    //     place: place,
+    //     photo: userphoto!.path);
+    // addStudents(studentAdd);
+    Navigator.of(context).pop();
+    BlocProvider.of<StudentBloc>(context).add(
+      AddStudentEvent(
         name: name,
         age: age,
         phonenumber: phone,
         place: place,
-        photo: userphoto!.path);
-    addStudents(studentAdd);
-    Navigator.of(context).pop();
+        imagePath: photo!.path,
+      ),
+    );
   }
 
-  File? userphoto;
-
-  Future<void> getPhoto() async {
-    final photo = await ImagePicker().pickImage(source: ImageSource.gallery);
-
-    if (photo == null) {
-      return;
-    } else {
-      final photoTemp = File(photo.path);
-      setState(() {
-        userphoto = photoTemp;
-      });
-    }
-  }
-
+  // File? userphoto;
   Future<void> imageSnackBar(BuildContext context) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

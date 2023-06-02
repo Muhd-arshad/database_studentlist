@@ -1,9 +1,10 @@
 import 'dart:io';
 
-import 'package:database_flutter/db/function/db_functions.dart';
+import 'package:database_flutter/bloc/studentblock/bloc/app_bloc.dart';
 import 'package:database_flutter/db/model/data_model.dart';
 import 'package:database_flutter/screen/std_details.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SearchStudent extends SearchDelegate {
   @override
@@ -30,16 +31,13 @@ class SearchStudent extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: studentLIstNotifier,
-      builder: (BuildContext context, List<StudentModel> studentlist,
-          Widget? child) {
+    return BlocBuilder<StudentBloc, StudentState>(
+      builder: (context, state) {
+        List<StudentModel> studentlist = state.studentList;
         return ListView.builder(
             itemBuilder: (context, index) {
               final data = studentlist[index];
-              if (data.name
-                  
-                  .contains(query.trim())) {
+              if (data.name.contains(query.trim())) {
                 return Column(
                   children: [
                     ListTile(
@@ -79,14 +77,13 @@ class SearchStudent extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: studentLIstNotifier,
-      builder: (BuildContext context, List<StudentModel> studentlist,
-          Widget? child) {
+    return BlocBuilder<StudentBloc, StudentState>(
+      builder: (context, state) {
+        List<StudentModel> studentlist = state.studentList;
         return ListView.builder(
           itemBuilder: (context, index) {
             var data = studentlist[index];
-            if ( data.name.contains(query.trim())) {
+            if (data.name.contains(query.trim())) {
               return Column(
                 children: [
                   ListTile(

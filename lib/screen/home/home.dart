@@ -1,12 +1,12 @@
 import 'dart:io';
 
+import 'package:database_flutter/bloc/studentblock/bloc/app_bloc.dart';
 import 'package:database_flutter/screen/add_list.dart';
 import 'package:database_flutter/screen/std_details.dart';
 import 'package:database_flutter/screen/std_edit.dart';
 import 'package:database_flutter/widgets/search.dart';
 import 'package:flutter/material.dart';
-
-import '../../db/function/db_functions.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../db/model/data_model.dart';
 
 class ScreenHome extends StatelessWidget {
@@ -14,7 +14,7 @@ class ScreenHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    getAllStudents();
+    BlocProvider.of<StudentBloc>(context).add(LoadingEvent());
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -29,10 +29,9 @@ class ScreenHome extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: ValueListenableBuilder(
-          valueListenable: studentLIstNotifier,
-          builder: (BuildContext ctx, List<StudentModel> studentList,
-              Widget? child) {
+        child: BlocBuilder<StudentBloc, StudentState>(
+          builder: (context, state) {
+            List<StudentModel> studentList = state.studentList;
             return ListView.separated(
               itemBuilder: (context, index) {
                 final data = studentList[index];
@@ -44,7 +43,7 @@ class ScreenHome extends StatelessWidget {
                         builder: (context) => StudentDetails(
                           photo: data.photo,
                           age: data.age,
-                          name: data.name[0].toUpperCase(),
+                          name: data.name,
                           phone: data.phonenumber,
                           place: data.place,
                           index: index,
@@ -62,7 +61,7 @@ class ScreenHome extends StatelessWidget {
                     children: [
                       IconButton(
                         onPressed: () {
-                          Navigator.pushReplacement(
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => EditStudents(
@@ -81,11 +80,12 @@ class ScreenHome extends StatelessWidget {
                       IconButton(
                         onPressed: () {
                           showDialog(
-                            context: ctx,
+                            context: context,
                             builder: (ctx1) {
                               return AlertDialog(
                                 backgroundColor: Colors.black,
                                 title: const Text(
+                                  
                                   'Are You Sure',
                                   style: TextStyle(color: Colors.white),
                                 ),
@@ -96,7 +96,7 @@ class ScreenHome extends StatelessWidget {
                                 actions: [
                                   TextButton(
                                     onPressed: () {
-                                      deleteStudent(index);
+                                     BlocProvider.of<StudentBloc>(context).add(DeleteStudentEvent(index: index));
                                       Navigator.of(ctx1).pop();
                                     },
                                     child: const Text(
@@ -106,7 +106,7 @@ class ScreenHome extends StatelessWidget {
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      Navigator.of(ctx).pop();
+                                      Navigator.of(context).pop();
                                     },
                                     child: const Text(
                                       'No..',
@@ -142,7 +142,7 @@ class ScreenHome extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const AddStudents(),
+              builder: (context) =>  const AddStudents(),
             ),
           );
         },

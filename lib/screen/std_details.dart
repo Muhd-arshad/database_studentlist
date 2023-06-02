@@ -42,7 +42,7 @@ class StudentDetails extends StatelessWidget {
                 height: 20,
               ),
               Text(
-                name.toUpperCase(),
+                name[0].toUpperCase() + name.substring(1),
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 25,

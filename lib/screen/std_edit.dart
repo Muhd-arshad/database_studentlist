@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
+import 'package:database_flutter/bloc/photoblock/bloc/photo_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:database_flutter/screen/home/home.dart';
 import 'package:flutter/material.dart';
 
@@ -46,6 +47,8 @@ class _EditStudentsState extends State<EditStudents> {
     placeCOntroller = TextEditingController(text: widget.place);
   }
 
+  File? photo;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,23 +63,31 @@ class _EditStudentsState extends State<EditStudents> {
             children: [
               Align(
                   alignment: Alignment.topCenter,
-                  child: image == true
-                      ? CircleAvatar(
+                  child: BlocBuilder<PhotoBloc, PhotoState>(
+                    builder: (context, state) {
+                      if (state is Photoloaded) {
+                        return CircleAvatar(
                           radius: 60,
                           backgroundImage: FileImage(
-                            File(widget.image),
+                            File(state.photo!.path),
                           ),
-                        )
-                      : CircleAvatar(
-                          radius: 60,
-                          backgroundImage: FileImage(File(_photo!.path)),
-                        )),
+                        );
+                      }
+                      return CircleAvatar(
+                        radius: 60,
+                        backgroundImage: FileImage(
+                          File(widget.image),
+                        ),
+                      );
+                    },
+                  )),
               const SizedBox(
                 height: 10,
               ),
               ElevatedButton.icon(
                 onPressed: () {
-                  onChangeImage();
+                  BlocProvider.of<PhotoBloc>(context)
+                      .add(PhotoSelectedEvents());
                 },
                 icon: const Icon(Icons.edit),
                 label: const Text('Edit image'),
@@ -155,7 +166,7 @@ class _EditStudentsState extends State<EditStudents> {
 
   Future<void> onEditButtonClicked() async {
     final studentmodel = StudentModel(
-         photo: _photo == null ? widget.image : _photo!.path,
+        photo: photo == null ? widget.image : photo!.path,
         name: nameController.text.trim(),
         age: ageCOntroller.text.trim(),
         phonenumber: phoneNumberCOntroller.text.trim(),
@@ -171,7 +182,7 @@ class _EditStudentsState extends State<EditStudents> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          margin:const EdgeInsets.all(30),
+          margin: const EdgeInsets.all(30),
           content: Text('${nameController.text} updated'),
         ),
       );
@@ -184,19 +195,19 @@ class _EditStudentsState extends State<EditStudents> {
     }
   }
 
-  File? _photo;
-  Future<void> onChangeImage() async {
-    final photo = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (photo == null) {
-      return;
-    } else {
-      final phototemp = File(photo.path);
-      setState(() {
-        _photo = phototemp;
-        image = false;
-      });
-    }
-  }
+//   File? _photo;
+//   Future<void> onChangeImage() async {
+//     final photo = await ImagePicker().pickImage(source: ImageSource.gallery);
+//     if (photo == null) {
+//       return;
+//     } else {
+//       final phototemp = File(photo.path);
+//       setState(() {
+//         _photo = phototemp;
+//         image = false;
+//       });
+//     }
+//   }
 }
 
 Future<void> showSnackbarMessage(BuildContext context) async {
